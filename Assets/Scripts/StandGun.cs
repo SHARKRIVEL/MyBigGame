@@ -21,7 +21,6 @@ public class StandGun : MonoBehaviour
 
     [SerializeField] GameObject standGunUIComponents;
     [SerializeField] Image shockWaveImage;
-    [SerializeField] GameObject Light;
     [SerializeField] GameObject EnemySpawners;
     [SerializeField] GameObject standGunActivator;
     [SerializeField] GameObject GunShell;
@@ -72,7 +71,6 @@ public class StandGun : MonoBehaviour
         standGunSlider.value = gunHealth;
         standGunUIComponents.SetActive(false);
         standGunInput.enabled = false;
-        Light.SetActive(false);
     }
 
     void OnExit(InputValue value)
@@ -186,7 +184,6 @@ public class StandGun : MonoBehaviour
         standGunUIComponents.gameObject.SetActive(true);
         standGunInput.enabled = true;
         gunCrossHair.gameObject.SetActive(true);  
-        Light.SetActive(true);
         EnemySpawners.SetActive(true);
         activated = true;
     }
@@ -197,7 +194,6 @@ public class StandGun : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         standGunUIComponents.gameObject.SetActive(false);
         standGunInput.enabled = false;
-        Light.SetActive(false);
         gunCamera.Priority = 0;
         gunCrossHair.gameObject.SetActive(false);
         if(player.activeSelf)

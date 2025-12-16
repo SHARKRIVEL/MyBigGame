@@ -9,6 +9,8 @@ using UnityEngine.UI;
 
 public class PlayerFiring : MonoBehaviour
 {
+    [SerializeField] Transform particleHolder;
+    public GameObject playerWeaponPos;
     bool gamePaused = false;
     [SerializeField] Weapon pW;
 
@@ -44,16 +46,24 @@ public class PlayerFiring : MonoBehaviour
     public List<ParticleSystem> mazelFlash;
     [SerializeField] ParticleSystem electricShieldHitEffect;
     [SerializeField] ParticleSystem enemyHitEffect;
+    [SerializeField] ParticleSystem[] enemyHitEffects;
+    int enemyHitEffectsIndex = 0;
     [SerializeField] ParticleSystem enemyHitEffect1;
     [SerializeField] ParticleSystem sandHitEffect;
+    [SerializeField] ParticleSystem[] sandHitEffects;
+    int sandHitEffectsIndex = 0;
     [SerializeField] ParticleSystem stoneHitEffect;
     [SerializeField] ParticleSystem hitGlassEffect;
     [SerializeField] ParticleSystem woodHitEffect;
+    [SerializeField] ParticleSystem[] woodHitEffects;
+    int woodHitEffectsIndex = 0;
     [SerializeField] ParticleSystem metalHitEffect;
+    [SerializeField] ParticleSystem[] metalHitEffects;
+    int metalHitEffectsIndex = 0;
     [SerializeField] ParticleSystem shootGunMetalHitEffect;
 
     [SerializeField] LayerMask playerHitLayers;
-    [SerializeField] GameObject FlashLightObject;
+    public GameObject flashLight;
     [SerializeField] GameObject scopeZoomImage1;
     [SerializeField] GameObject scopeZoomImage2;
     public GameObject crossHair;
@@ -87,12 +97,17 @@ public class PlayerFiring : MonoBehaviour
     int originalZooom = 40;
 
     bool isEmpty = false;
+
+    //flashLight On and Off
     bool isOn = false;
     bool granadeThrown = false;
     bool running = false;
     public bool reloading = true;
 
+    //prevents pause click MultipleTimes
     public bool didClick = true;
+
+    //Tougles between weapons and granade
     public bool weaponState = true;
     private bool paused = false;
     public bool reloaded = false;
@@ -119,6 +134,19 @@ public class PlayerFiring : MonoBehaviour
 
     void Start()
     {
+        enemyHitEffects = new ParticleSystem[5];
+        metalHitEffects = new ParticleSystem[5];
+        woodHitEffects = new ParticleSystem[5];
+        sandHitEffects = new ParticleSystem[5];
+
+        for(int i=0;i<5;i++)
+        {
+            enemyHitEffects[i] = Instantiate(enemyHitEffect,particleHolder.position,Quaternion.identity,particleHolder);
+            metalHitEffects[i] = Instantiate(metalHitEffect,particleHolder.position,Quaternion.identity,particleHolder);
+            woodHitEffects[i] = Instantiate(woodHitEffect,particleHolder.position,Quaternion.identity,particleHolder);
+            sandHitEffects[i] = Instantiate(sandHitEffect,particleHolder.position,Quaternion.identity,particleHolder);
+        }
+
         timeBombRef = timeBombObject.GetComponent<TimeBomb>();
         timeBombRef.blastAudioSource = blastAudioSource;
         timeBombRef.blastParticle = blastParticle;
@@ -138,10 +166,10 @@ public class PlayerFiring : MonoBehaviour
 
     void FlashLight()
     {
-        if (Input.GetKeyDown(KeyCode.G))
+        if (Input.GetKeyDown(KeyCode.G) && flashLight != null)
         {
             isOn = !isOn;
-            FlashLightObject.SetActive(isOn);
+            flashLight.SetActive(isOn);
         }
     }
 
@@ -416,8 +444,12 @@ public class PlayerFiring : MonoBehaviour
                 HitAudio(enemyHitSound);
                 if (count != 2)
                 {
-                    Instantiate(enemyHitEffect, hit.point, Quaternion.LookRotation(hit.normal), rayCastDitection.transform);
+                    if(enemyHitEffectsIndex >= enemyHitEffects.Length) enemyHitEffectsIndex = 0;
+                    enemyHitEffects[enemyHitEffectsIndex].gameObject.transform.position = hit.point;
+                    enemyHitEffects[enemyHitEffectsIndex].gameObject.transform.rotation = Quaternion.LookRotation(hit.normal);
+                    enemyHitEffects[enemyHitEffectsIndex].Play();
                     damage = pW.weaponDamage;
+                    enemyHitEffectsIndex++;
                 }
                 else
                 {
@@ -430,7 +462,10 @@ public class PlayerFiring : MonoBehaviour
             if (rayCastDitection.CompareTag("EnemySpawner"))
             {
                 HitAudio(metalHitSound);
-                Instantiate(metalHitEffect, hit.point, Quaternion.LookRotation(hit.normal));
+                if(metalHitEffectsIndex >= metalHitEffects.Length) metalHitEffectsIndex = 0;
+                metalHitEffects[metalHitEffectsIndex].gameObject.transform.position = hit.point;
+                metalHitEffects[metalHitEffectsIndex].gameObject.transform.rotation = Quaternion.LookRotation(hit.normal);
+                metalHitEffects[metalHitEffectsIndex].Play();
                 if (count != 2)
                 {
                     damage = pW.weaponDamage;
@@ -441,28 +476,37 @@ public class PlayerFiring : MonoBehaviour
                 }
 
                 rayCastDitection.GetComponent<EnemySpawner>().DamageTaker(damage);
+                metalHitEffectsIndex++;
             }
 
             if (rayCastDitection.CompareTag("Wood"))
             {
                 HitAudio(woodHitSound);
-                Instantiate(woodHitEffect, hit.point, Quaternion.LookRotation(hit.normal));
+                if(woodHitEffectsIndex >= woodHitEffects.Length) woodHitEffectsIndex = 0;
+                woodHitEffects[woodHitEffectsIndex].gameObject.transform.position = hit.point;
+                woodHitEffects[woodHitEffectsIndex].gameObject.transform.rotation = Quaternion.LookRotation(hit.normal);
+                woodHitEffects[woodHitEffectsIndex].Play();
                 Crate crate = rayCastDitection.gameObject.GetComponent<Crate>();
                 if (crate)
                 {
                     crate.TakeDamage(DamageByWeapon(hit.point));
                 }
+                woodHitEffectsIndex++;
             }
 
             if (rayCastDitection.CompareTag("Metal") || rayCastDitection.CompareTag("Vehical"))
             {
                 HitAudio(metalHitSound);
-                Instantiate(metalHitEffect, hit.point, Quaternion.LookRotation(hit.normal));
+                if(metalHitEffectsIndex >= metalHitEffects.Length) metalHitEffectsIndex = 0;
+                metalHitEffects[metalHitEffectsIndex].gameObject.transform.position = hit.point;
+                metalHitEffects[metalHitEffectsIndex].gameObject.transform.rotation = Quaternion.LookRotation(hit.normal);
+                metalHitEffects[metalHitEffectsIndex].Play();
                 OilBarrel barrel = rayCastDitection.gameObject.GetComponent<OilBarrel>();
                 if (barrel)
                 {
                     barrel.TakeDamage(DamageByWeapon(hit.point));
                 }
+                metalHitEffectsIndex++;
             }
 
             if (rayCastDitection.CompareTag("TileGround"))
@@ -480,7 +524,11 @@ public class PlayerFiring : MonoBehaviour
             if (rayCastDitection.CompareTag("SandGround"))
             {
                 HitAudio(sandHitSound);
-                Instantiate(sandHitEffect, hit.point, Quaternion.LookRotation(hit.normal));
+                if(sandHitEffectsIndex >= sandHitEffects.Length) sandHitEffectsIndex = 0;
+                sandHitEffects[sandHitEffectsIndex].gameObject.transform.position = hit.point;
+                sandHitEffects[sandHitEffectsIndex].gameObject.transform.rotation = Quaternion.LookRotation(hit.normal);
+                sandHitEffects[sandHitEffectsIndex].Play();
+                sandHitEffectsIndex++;
             }
 
             if (rayCastDitection.CompareTag("Robot"))
@@ -488,8 +536,12 @@ public class PlayerFiring : MonoBehaviour
                 HitAudio(metalHitSound);
                 if (count != 2)
                 {
-                    Instantiate(metalHitEffect, hit.point, Quaternion.LookRotation(hit.normal), rayCastDitection.transform);
+                    if(metalHitEffectsIndex >= metalHitEffects.Length) metalHitEffectsIndex = 0;
+                    metalHitEffects[metalHitEffectsIndex].gameObject.transform.position = hit.point;
+                    metalHitEffects[metalHitEffectsIndex].gameObject.transform.rotation = Quaternion.LookRotation(hit.normal);
+                    metalHitEffects[metalHitEffectsIndex].Play();
                     damage = pW.weaponDamage;
+                    metalHitEffectsIndex++;
                 }
                 else
                 {
@@ -508,8 +560,12 @@ public class PlayerFiring : MonoBehaviour
                 HitAudio(metalHitSound);
                 if (count != 2)
                 {
-                    Instantiate(metalHitEffect, hit.point, Quaternion.LookRotation(hit.normal), rayCastDitection.transform);
+                    if(metalHitEffectsIndex >= metalHitEffects.Length) metalHitEffectsIndex = 0;
+                    metalHitEffects[metalHitEffectsIndex].gameObject.transform.position = hit.point;
+                    metalHitEffects[metalHitEffectsIndex].gameObject.transform.rotation = Quaternion.LookRotation(hit.normal);
+                    metalHitEffects[metalHitEffectsIndex].Play();
                     damage = pW.weaponDamage;
+                    metalHitEffectsIndex++;
                 }
                 else
                 {

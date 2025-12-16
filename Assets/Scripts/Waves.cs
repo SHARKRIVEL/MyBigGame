@@ -5,10 +5,8 @@ public class Waves : MonoBehaviour
 {
     [SerializeField] TMP_Text text;
     public string key;
-
     [SerializeField] private int count;
     public int Count { get { return count; }}
-    
     GameObject gameManager;
     Helper helper;
 

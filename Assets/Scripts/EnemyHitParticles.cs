@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 public class EnemyHitParticles : MonoBehaviour
 {
+    [SerializeField] Transform particleHolder;
     [SerializeField] HitEffects hitEffectsObject;
     [SerializeField] AudioSource weaponAudioSource;
 
@@ -12,11 +13,27 @@ public class EnemyHitParticles : MonoBehaviour
 
     public float volume;
 
-    [SerializeField] float hitForce; 
+    [SerializeField] float hitForce;
+
+    [SerializeField] List<ParticleSystem> enemyHitParticles = new List<ParticleSystem>();
+    [SerializeField] List<ParticleSystem> metalHitParticles = new List<ParticleSystem>();  
+    [SerializeField] List<ParticleSystem> woodHitParticles = new List<ParticleSystem>();  
+    [SerializeField] List<ParticleSystem> electricHitParticles = new List<ParticleSystem>(); 
+    int enemyHitParticlesIndex = 0;
+    int metalHitParticlesIndex = 0;
+    int woodHitParticlesIndex = 0;
+    int electricHitParticlesIndex = 0;
 
     void Start()
     {
         standGunPs = GetComponent<ParticleSystem>();
+        for(int i=0;i<10;i++)
+        {
+            enemyHitParticles.Add(Instantiate(hitEffectsObject.enemyEffect,transform.position,Quaternion.identity,particleHolder));
+            metalHitParticles.Add(Instantiate(hitEffectsObject.metalEffect,transform.position,Quaternion.identity,particleHolder));
+            woodHitParticles.Add(Instantiate(hitEffectsObject.woodEffect,transform.position,Quaternion.identity,particleHolder));
+            electricHitParticles.Add(Instantiate(hitEffectsObject.electricShieldEffect,transform.position,Quaternion.identity,particleHolder));
+        }
     }
 
     void OnParticleCollision(GameObject gb)
@@ -24,40 +41,52 @@ public class EnemyHitParticles : MonoBehaviour
         if (gb.CompareTag("Enemy"))
         {
             HitAudio(hitEffectsObject.enemySound);
-            HitEffect(gb,hitEffectsObject.enemyEffect);
+            if(enemyHitParticlesIndex >= enemyHitParticles.Count) enemyHitParticlesIndex = 0;
+            HitEffect(gb,enemyHitParticles[enemyHitParticlesIndex]);
 
             Enemy enemy = gb.GetComponentInParent<Enemy>();
             if(enemy)
             {
                 enemy.TakeDamage(standGunbulletDamage,-(gb.transform.position - transform.position),hitForce);
             }
+            enemyHitParticlesIndex++;
         }
-        else if(gb.CompareTag("TileGround"))
+        /*else if(gb.CompareTag("TileGround"))
         {
             HitAudio(hitEffectsObject.groundSound);
-            HitEffect(gb,hitEffectsObject.groundEffect);
-        }
+            if(groundHitParticlesIndex >= groundHitParticles.Count) groundHitParticlesIndex = 0;
+            HitEffect(gb,metalHitParticles[groundHitParticlesIndex]);
+            groundHitParticlesIndex++;
+        }*/
         else if(gb.CompareTag("Metal"))
         {
             HitAudio(hitEffectsObject.metalSound);
-            HitEffect(gb,hitEffectsObject.metalEffect);
+            if(metalHitParticlesIndex >= metalHitParticles.Count) metalHitParticlesIndex = 0;
+            HitEffect(gb,metalHitParticles[metalHitParticlesIndex]);
+            metalHitParticlesIndex++;
         }
         else if(gb.CompareTag("Wood"))
         {
             HitAudio(hitEffectsObject.woodSound);
-            HitEffect(gb,hitEffectsObject.woodEffect);
+            if(woodHitParticlesIndex >= woodHitParticles.Count) woodHitParticlesIndex = 0;
+            HitEffect(gb,woodHitParticles[woodHitParticlesIndex]);
+            woodHitParticlesIndex++;
         }
         else if(gb.CompareTag("EnemySpawner"))
         {   
             HitAudio(hitEffectsObject.metalSound);
-            HitEffect(gb,hitEffectsObject.metalEffect);
+            if(metalHitParticlesIndex >= enemyHitParticles.Count) metalHitParticlesIndex = 0;
+            HitEffect(gb,metalHitParticles[metalHitParticlesIndex]);
+            metalHitParticlesIndex++;
 
             gb.GetComponent<EnemySpawner>().DamageTaker(standGunbulletDamage);
         }
         else if(gb.CompareTag("ElectricShield"))
         {
             HitAudio(hitEffectsObject.electricShieldSound);
-            HitEffect(gb,hitEffectsObject.electricShieldEffect);
+            if(electricHitParticlesIndex >= electricHitParticles.Count) electricHitParticlesIndex = 0;
+            HitEffect(gb,electricHitParticles[electricHitParticlesIndex]);
+            electricHitParticlesIndex++;
         }
     }
 
@@ -74,7 +103,9 @@ public class EnemyHitParticles : MonoBehaviour
         {
             Vector3 contactPoint = collisionEvents[i].intersection;
             Vector3 normal = collisionEvents[i].normal;
-            Instantiate(ps,contactPoint,Quaternion.LookRotation(normal));
+            ps.gameObject.transform.position = contactPoint;
+            ps.gameObject.transform.LookAt(normal);
+            ps.Play();
         }
     }
 }

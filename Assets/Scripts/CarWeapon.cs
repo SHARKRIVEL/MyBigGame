@@ -1,9 +1,11 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class CarWeapon : MonoBehaviour
 {
+    [SerializeField] Transform particleHolder;
     [SerializeField] HitEffects hitEffectsObject;
     [SerializeField] ParticleSystem[] weaponMeazelFlashes;
     [SerializeField] Image[] fireBallStrengthImages;
@@ -42,12 +44,31 @@ public class CarWeapon : MonoBehaviour
     Rigidbody fireBallRb;
     Collider fireBallCol;
 
+    [SerializeField] List<ParticleSystem> groundHitParticles = new List<ParticleSystem>();
+    [SerializeField] List<ParticleSystem> enemyHitParticles = new List<ParticleSystem>();
+    [SerializeField] List<ParticleSystem> metalHitParticles = new List<ParticleSystem>();  
+    [SerializeField] List<ParticleSystem> woodHitParticles = new List<ParticleSystem>();  
+    [SerializeField] List<ParticleSystem> electricHitParticles = new List<ParticleSystem>(); 
+    int enemyHitParticlesIndex = 0;
+    int metalHitParticlesIndex = 0;
+    int woodHitParticlesIndex = 0;
+    int electricHitParticlesIndex = 0;
+    int groundHitParticlesIndex = 0;
+
     void Start()
     {
         fireBall = _FireBall.GetComponent<FireBall>();
         fireBallCol = _FireBall.GetComponent<Collider>();
         fireBallRb = _FireBall.GetComponent<Rigidbody>();
         machineGunSound = gunSounds.clip;
+        for(int i=0;i<10;i++)
+        {
+            groundHitParticles.Add(Instantiate(hitEffectsObject.groundEffect,transform.position,Quaternion.identity,particleHolder));
+            enemyHitParticles.Add(Instantiate(hitEffectsObject.enemyEffect,transform.position,Quaternion.identity,particleHolder));
+            metalHitParticles.Add(Instantiate(hitEffectsObject.metalEffect,transform.position,Quaternion.identity,particleHolder));
+            woodHitParticles.Add(Instantiate(hitEffectsObject.woodEffect,transform.position,Quaternion.identity,particleHolder));
+            electricHitParticles.Add(Instantiate(hitEffectsObject.electricShieldEffect,transform.position,Quaternion.identity,particleHolder));
+        }
     }
 
     void Update()
@@ -122,42 +143,54 @@ public class CarWeapon : MonoBehaviour
                         if (hit1.collider.CompareTag("Wood"))
                         {
                             HitAudio(hitEffectsObject.woodSound);
-                            HitEffect(hitEffectsObject.woodEffect, hit1.point, hit1.normal);
+                            if(woodHitParticlesIndex >= woodHitParticles.Count) woodHitParticlesIndex = 0;
+                            HitEffect(woodHitParticles[woodHitParticlesIndex], hit1.point, hit1.normal);
+                            woodHitParticlesIndex++;
                         }
                         else if (hit1.collider.CompareTag("TileGround"))
                         {
                             HitAudio(hitEffectsObject.groundSound);
-                            HitEffect(hitEffectsObject.groundEffect, hit1.point, hit1.normal);
+                            if(groundHitParticlesIndex >= groundHitParticles.Count) groundHitParticlesIndex = 0;
+                            HitEffect(groundHitParticles[groundHitParticlesIndex], hit1.point, hit1.normal);
+                            groundHitParticlesIndex++;
                         }
                         else if (hit1.collider.CompareTag("Metal"))
                         {
                             HitAudio(hitEffectsObject.metalSound);
-                            HitEffect(hitEffectsObject.metalEffect, hit1.point, hit1.normal);
+                            if(metalHitParticlesIndex >= woodHitParticles.Count) metalHitParticlesIndex = 0;
+                            HitEffect(metalHitParticles[metalHitParticlesIndex], hit1.point, hit1.normal);
 
                             OilBarrel oilBarrel = hit1.collider.GetComponent<OilBarrel>();
                             if (oilBarrel)
                             {
                                 oilBarrel.TakeDamage(vehicalGunbulletDamage);
                             }
+                            metalHitParticlesIndex++;
                         }
                         else if (hit1.collider.CompareTag("Enemy"))
                         {
                             HitAudio(hitEffectsObject.enemySound);
-                            HitEffect(hitEffectsObject.enemyEffect, hit1.point, hit1.normal);
+                            if(enemyHitParticlesIndex >= enemyHitParticles.Count) enemyHitParticlesIndex = 0;
+                            HitEffect(enemyHitParticles[enemyHitParticlesIndex], hit1.point, hit1.normal);
 
                             hit1.collider.GetComponentInParent<Enemy>().TakeDamage(vehicalGunbulletDamage,-ray.direction,hitForce);
+                            enemyHitParticlesIndex++;
                         }
                         else if (hit1.collider.CompareTag("EnemySpawner"))
                         {
                             HitAudio(hitEffectsObject.metalSound);
-                            HitEffect(hitEffectsObject.metalEffect, hit1.point, hit1.normal);
+                            if(metalHitParticlesIndex >= metalHitParticles.Count) metalHitParticlesIndex = 0;
+                            HitEffect(metalHitParticles[metalHitParticlesIndex], hit1.point, hit1.normal);
 
                             hit1.collider.GetComponent<EnemySpawner>().DamageTaker(vehicalGunbulletDamage);
+                            metalHitParticlesIndex++;
                         }
                         else if(hit1.collider.CompareTag("ElectricShield"))
                         {
                             HitAudio(hitEffectsObject.electricShieldSound);
-                            HitEffect(hitEffectsObject.electricShieldEffect, hit1.point, hit1.normal);
+                            if(electricHitParticlesIndex >= electricHitParticles.Count) electricHitParticlesIndex = 0;
+                            HitEffect(electricHitParticles[electricHitParticlesIndex], hit1.point, hit1.normal);
+                            electricHitParticlesIndex++;
                         }
 
                         StartCoroutine(FireRate());
@@ -185,7 +218,9 @@ public class CarWeapon : MonoBehaviour
 
     void HitEffect(ParticleSystem ps,Vector3 hitPoint,Vector3 hitNormal)
     {
-        Instantiate(ps, hitPoint, Quaternion.LookRotation(hitNormal));
+        ps.gameObject.transform.position = hitPoint;
+        ps.gameObject.transform.LookAt(hitNormal);
+        ps.Play();
     }
 
     public void MachineGunStopper()

@@ -33,10 +33,14 @@ public class Store : MonoBehaviour
             GameManager.gameManager.UpdateCash(-requiredCurrencyForH);
             healthKitCount--;
             healthKitCountText.text = healthKitCount.ToString();
-            GameObject.FindWithTag("Player").GetComponent<PlayerHealth>().UpdateHealthText(1);
-            if(GameManager.gameManager.LevelRef > storeIndex)
+            PlayerHealth playerHealth = GameObject.FindWithTag("Player").GetComponent<PlayerHealth>();
+            if(playerHealth != null)
             {
-                GameManager.gameManager.UpdateInventoryBetweenLevels(1,0,requiredCurrencyForH);
+                playerHealth.UpdateHealthText(1);
+                if(GameManager.gameManager.LevelRef > storeIndex)
+                {
+                    GameManager.gameManager.UpdateInventoryBetweenLevels(1,0,requiredCurrencyForH);
+                }
             }
         }
     }
@@ -49,10 +53,14 @@ public class Store : MonoBehaviour
             GameManager.gameManager.UpdateCash(-requiredCurrencyForG);
             granadeCount--;
             granadeCountText.text = granadeCount.ToString();
-            GameObject.FindWithTag("Player").GetComponent<PlayerFiring>().UpdateGranadeText(1);
-            if(GameManager.gameManager.LevelRef > storeIndex)
+            PlayerFiring playerFiring = GameObject.FindWithTag("Player").GetComponent<PlayerFiring>();
+            if(playerFiring != null)
             {
-                GameManager.gameManager.UpdateInventoryBetweenLevels(0,1,requiredCurrencyForG);
+                playerFiring.UpdateGranadeText(1);
+                if(GameManager.gameManager.LevelRef > storeIndex)
+                {
+                    GameManager.gameManager.UpdateInventoryBetweenLevels(0,1,requiredCurrencyForG);
+                }
             }
         }
     }
